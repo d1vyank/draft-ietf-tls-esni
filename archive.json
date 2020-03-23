@@ -1,6 +1,6 @@
 {
   "magic": "B8n2c@e8kvfx",
-  "timestamp": "2020-03-18T15:18:19.060833+00:00",
+  "timestamp": "2020-03-23T15:57:02.810867+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12718,7 +12718,7 @@
       "labels": [],
       "body": "I've tried to capture what I think is a reasonable way to handle padding now we've changed from ESNI->ECHO.  If we could do something like this, that'd be better than what's in -06.\r\n\r\nNote that I'd be even happier if we entirely eliminated ECHOConfig.minimum_inner_length - I don't think it actually adds any value and it represents yet another way to get a configuration wrong.  ",
       "createdAt": "2020-03-14T21:05:06Z",
-      "updatedAt": "2020-03-17T22:03:58Z",
+      "updatedAt": "2020-03-22T16:48:26Z",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -12785,6 +12785,83 @@
           "body": "> For each field\r\n\r\nClarification: this is for each field where the client doesn't reference the outer ClientHello. If the client wishes to do that, it means the client doesn't consider that field secret so there isn't anything to pad.",
           "createdAt": "2020-03-17T22:03:58Z",
           "updatedAt": "2020-03-17T22:03:58Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I like @davidben's suggested algorithm, as an ideal padding function requires input from both the client and server. (Ideally, servers would send padding recommendations for each extension that might vary specifically for them, such as the server name. They don't have insight into anything else, so clients need to make padding decisions based on local configuration.)\r\n\r\n@sftcd, what do you think?",
+          "createdAt": "2020-03-18T15:26:40Z",
+          "updatedAt": "2020-03-18T15:26:40Z"
+        },
+        {
+          "author": "sftcd",
+          "authorAssociation": "NONE",
+          "body": "\n\nOn 18/03/2020 15:26, Christopher Wood wrote:\n> I like @davidben's suggested algorithm, as an ideal padding function\n> requires input from both the client and server. (Ideally, servers\n> would send padding recommendations for each extension that might vary\n> specifically for them, such as the server name. They don't have\n> insight into anything else, so clients need to make padding decisions\n> based on local configuration.)\n> \n> @sftcd, what do you think?\n\nCould live with it, but still prefer no server config.\nI'm looking a bit at some numbers and will try make a\nconcrete suggestion later today. If I don't get that\ndone, it seems fair to accept @davidben's algo and move\non.\n\nCheers,\nS.\n\n> \n",
+          "createdAt": "2020-03-18T15:29:25Z",
+          "updatedAt": "2020-03-18T15:29:25Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "If we can get away with no server config, I'm also entirely happy with that. Fewer moving parts is always great. We certainly could do that by saying names are padded up to 254, but I think that's too wasteful. But if we're happy with some global set of buckets that makes everyone happy (be it multiples of 16, some funny exponential thing), great!",
+          "createdAt": "2020-03-18T15:57:47Z",
+          "updatedAt": "2020-03-18T15:57:47Z"
+        },
+        {
+          "author": "sftcd",
+          "authorAssociation": "NONE",
+          "body": "\n(trimming violently and responding slowly:-)\n\nOn 17/03/2020 22:02, David Benjamin wrote:\n> I'm thinking something along the lines of:\n\nSo your steps 1-6 is a better scheme than draft-06.\n\nI still think step 2 would be better as something like:\n\n2. ECHOConfig contains max_name_len as before but we\nRECOMMEND it be zero and a) if the name to be padded is\nlonger than max_name_len, then names will be padded as\nfollows: P=32-(len(name)%32)+heads_or_tails*32, or b)\nif the name to be padded is shorter than max_name_len\nthen we just do as the server asked and pad to that\nlength.\n\nThat (hopefully:-) means a default of \"pad out to the\nnext multiple of 32, then toss a coin and add another\n32 if the coin landed as heads.\"\n\nIf we landed somewhere there, I'd be happy to make this\nPR say that or to make a new one or whatever.\n\nAccording to some data I have the CDFs for names and\nfor these padded lengths would be as follows:\n\nLen, CDF, Padded-CDF\n32, 81.28, 40.64\n64, 97.87, 89.57\n96, 99.31, 98.59\n128, 99.87, 99.59\n\nThat means that 81.28 of names are <32 octets long\nand 40.64% of name+name_padding will be 32 octets\nlong. 97.87% of names are <64 octets and 89.57% of\nname+name_padding are 64 octets long.\n\nI think we should RECOMMEND setting max_name_len to\nzero unless an ESNI key generator has a specific\nreason to set it to a non-zero value. ISTM the use-case\nfor non-zero values is where the anonymity set has only\na few very long names that with length differences of\n>32 octets for which it is considered important to use\nECHO. I'm basically fine that we default to not\nserving that use-case wellmby default, as I don't\nbelieve it's real. (But I could be wrong;-)\n\n\nCheers,\nS.\n\n\n\n\n\n\n",
+          "createdAt": "2020-03-20T11:34:52Z",
+          "updatedAt": "2020-03-20T11:34:52Z"
+        },
+        {
+          "author": "sayrer",
+          "authorAssociation": "NONE",
+          "body": "Could the sender always pad their packets to at least 1200 bytes or something, using an encrypted extension in the ClientHello?\r\n\r\nI don't understand the focus on server input to a padding function that would ideally fill out one packet.",
+          "createdAt": "2020-03-21T02:49:10Z",
+          "updatedAt": "2020-03-21T06:31:55Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@sftcd what's the value in adding zero or one 32B blocks after rounding? Why not just stick with what was done, say, in RFC8467? (We could make it read something like, \"clients may add zero or one blocks.\" Either way, I'm more or less fine with the suggested change. Would you mind updating this PR to match?)",
+          "createdAt": "2020-03-22T16:31:39Z",
+          "updatedAt": "2020-03-22T16:34:58Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> I don't understand the focus on server input to a padding function that would ideally fill out one packet.\r\n\r\nPer [David's comment](https://github.com/tlswg/draft-ietf-tls-esni/pull/209#issuecomment-600322366) above, clients *could* use help from servers in choosing appropriate padding lengths. (Only servers know their name anonymity set.)",
+          "createdAt": "2020-03-22T16:33:49Z",
+          "updatedAt": "2020-03-22T16:33:49Z"
+        },
+        {
+          "author": "sftcd",
+          "authorAssociation": "NONE",
+          "body": "\nHiya,\n\nOn 22/03/2020 16:32, Christopher Wood wrote:\n> @sftcd what's the value in adding zero or one 32B blocks after\n> rounding? Why not just stick with what was done, say, in RFC8467?\n>\n\nSay if the anonymity set has lots of names <32 length\n(~81% of names in the data I have) but a small number\nbetween 32 and 64 (~16% in my data). Then this should\ndisguise the use of the longer names at the expense\nof sending more octets. Would be v. happy to know if\nthat made sense to others.\n\nCheers,\nS.\n\n",
+          "createdAt": "2020-03-22T16:39:07Z",
+          "updatedAt": "2020-03-22T16:39:07Z"
+        },
+        {
+          "author": "sftcd",
+          "authorAssociation": "NONE",
+          "body": "\nA friendly amendment below (but one I think is\nimportant)...\n\nOn 22/03/2020 16:34, Christopher Wood wrote:\n>> I don't understand the focus on server input to a padding function\n>> that would ideally fill out one packet.\n> \n> Per [David's\n> comment](https://github.com/tlswg/draft-ietf-tls-esni/pull/209#issuecomment-600322366)\n> above, clients *could* use help from servers in choosing appropriate\n> padding lengths. (Only servers know their name anonymity set.)\n> \n\nI think that last really needs to be \"Only servers can know\ntheir name anonymity set. But many servers will not know\nthat, either due to wildcard certs or because names/vhosts\nare added and removed all the time independent of whatever\nis in the DNS.\"\n\nCheers,\nS.\n",
+          "createdAt": "2020-03-22T16:41:47Z",
+          "updatedAt": "2020-03-22T16:41:47Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> Would be v. happy to know if that made sense to others.\r\n\r\nIt makes sense, I'm just not not sure it's worth the cost. That said, this will always be an imperfect solution, so I'm happy either way.\r\n",
+          "createdAt": "2020-03-22T16:44:11Z",
+          "updatedAt": "2020-03-22T16:44:20Z"
+        },
+        {
+          "author": "sftcd",
+          "authorAssociation": "NONE",
+          "body": "\n\nOn 22/03/2020 16:44, Christopher Wood wrote:\n>> Would be v. happy to know if that made sense to others.\n> \n> It makes sense, I'm just not not sure it's worth the cost. \n\nYep. Me neither. It is cheaper than padding to 254 octets\nfor everyone though;-)\n\nPartly, I'm not that sympathetic towards anyone who\nwants to hide a crazily-long server_name. OTOH, I guess\nthere may be a few who can't easily change names so we\nprobably ought try do something for 'em.\n\nCheers,\nS.\n\n> That said,\n> this will always be an imperfect solution, so I'm happy either way.\n> \n> \n",
+          "createdAt": "2020-03-22T16:48:26Z",
+          "updatedAt": "2020-03-22T16:48:26Z"
         }
       ],
       "reviews": [
@@ -12847,6 +12924,25 @@
           ]
         }
       ]
+    },
+    {
+      "number": 210,
+      "id": "MDExOlB1bGxSZXF1ZXN0MzkxMTE4OTgz",
+      "title": "Fix lingering encrypted_server_name extension references.",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/210",
+      "state": "MERGED",
+      "author": "chris-wood",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2020-03-19T16:50:19Z",
+      "updatedAt": "2020-03-19T16:50:56Z",
+      "closedAt": "2020-03-19T16:50:56Z",
+      "mergedAt": "2020-03-19T16:50:56Z",
+      "mergedBy": "ekr",
+      "comments": [],
+      "reviews": []
     }
   ]
 }

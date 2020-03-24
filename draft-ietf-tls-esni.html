@@ -13,7 +13,7 @@
        This document defines a simple mechanism for encrypting the
 Server Name Indication for TLS 1.3. 
     " name="description">
-<meta content="xml2rfc 2.40.1" name="generator">
+<meta content="xml2rfc 2.41.0" name="generator">
 <meta content="Internet-Draft" name="keyword">
 <meta content="draft-ietf-tls-esni-latest" name="ietf.draft">
 <link href="draft-ietf-tls-esni.xml" rel="alternate" type="application/rfc+xml">
@@ -30,7 +30,7 @@ html {
   --small-font-size: 14.5px;
 }
 body {
-  max-width: 624px;
+  max-width: 600px;
   margin: 75px auto;
   padding: 0 5px;
   color: var(--text-color);
@@ -208,7 +208,9 @@ tt, code, pre {
 }
 pre {
   border: 1px solid var(--line-color);
-  line-height: 17px;
+  font-size: 13.5px;
+  line-height: 16px;
+  letter-spacing: -0.2px;
   margin: 5px;
   padding: 5px;
 }
@@ -436,7 +438,7 @@ hr {
   font-weight: 700;
 }
 /* make the index two-column on all but the smallest screens */
-@media (min-width: 600px) {
+@media (min-width: 500px) {
   .index ul {
     column-count: 2;
     column-gap: 20px;
@@ -471,7 +473,7 @@ hr.addr {
   color: #ddd;
   max-width: calc(100% - 16px);
 }
-@media (min-width: 600px) {
+@media (min-width: 500px) {
   #authors-addresses > section {
     display: relative;
     padding: 32px 0 0;
@@ -514,7 +516,7 @@ hr.addr {
   font-style: italic;
 }
 /* alternative layout for smaller screens */
-@media screen and (max-width: 953px) {
+@media screen and (max-width: 929px) {
   #toc {
     position: fixed;
     z-index: 2;
@@ -580,9 +582,10 @@ hr.addr {
 }
 
 /* alternative layout for wide screens */
-@media screen and (min-width: 954px) {
+@media screen and (min-width: 930px) {
   body {
-    padding-right: 380px;
+    padding-right: 360px;
+    padding-right: calc(min(180px + 20%, 500px));
   }
   #toc {
     position: fixed;
@@ -724,16 +727,13 @@ dl.dlNewline > dt {
 }
 
 /* Provide styling for table cell text alignment */
-table td.text-left,
-table th.text-left {
+table .text-left, table .text-left {
   text-align: left;
 }
-table td.text-center,
-table th.text-center {
+table .text-center, table .text-center {
   text-align: center;
 }
-table td.text-right,
-table th.text-right {
+table .text-right, table .text-right {
   text-align: right;
 }
 
@@ -833,7 +833,7 @@ table.left {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Rescorla, et al.</td>
-<td class="center">Expires 19 September 2020</td>
+<td class="center">Expires 25 September 2020</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -846,12 +846,12 @@ table.left {
 <dd class="internet-draft">draft-ietf-tls-esni-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2020-03-18" class="published">18 March 2020</time>
+<time datetime="2020-03-24" class="published">24 March 2020</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Experimental</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2020-09-19">19 September 2020</time></dd>
+<dd class="expires"><time datetime="2020-09-25">25 September 2020</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -898,7 +898,7 @@ Server Name Indication for TLS 1.3.<a href="#section-abstract-1" class="pilcrow"
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 19 September 2020.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 25 September 2020.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1427,7 +1427,7 @@ connections to encrypt the ClientHelloInner structure.<a href="#section-5-8.2" c
 </dd>
 </dl>
 <p id="section-5-9">This protocol also defines the "echo_required" alert, which is sent by the
-client when it offered an "encrypted_server_name" extension which was not
+client when it offered an "encrypted_client_hello" extension which was not
 accepted by the server.<a href="#section-5-9" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1627,7 +1627,7 @@ keys.<a href="#section-7.2.2-1" class="pilcrow">¶</a></p>
 <p id="section-7.2.2-2">Otherwise, when the handshake completes successfully with the public name
 authenticated, the client MUST abort the connection with an "echo_required"
 alert. It then processes the "retry_keys" field from the server's
-"encrypted_server_name" extension.<a href="#section-7.2.2-2" class="pilcrow">¶</a></p>
+"encrypted_client_hello" extension.<a href="#section-7.2.2-2" class="pilcrow">¶</a></p>
 <p id="section-7.2.2-3">If one of the values contains a version supported by the client, it can regard
 the ECHO keys as securely replaced by the server. It SHOULD retry the
 handshake with a new transport connection, using that value to encrypt the
@@ -1643,7 +1643,7 @@ disabled.<a href="#section-7.2.2-4" class="pilcrow">¶</a></p>
 <p id="section-7.2.2-5">If the field contains any other value, the client MUST abort the connection
 with an "illegal_parameter" alert.<a href="#section-7.2.2-5" class="pilcrow">¶</a></p>
 <p id="section-7.2.2-6">If the server negotiates an earlier version of TLS, or if it does not
-provide an "encrypted_server_name" extension in EncryptedExtensions, the
+provide an "encrypted_client_hello" extension in EncryptedExtensions, the
 client proceeds with the handshake, authenticating for
 ECHOConfigContents.public_name as described in <a href="#auth-public-name" class="xref">Section 7.2.2.1</a>. If an earlier
 version was negotiated, the client MUST NOT enable the False Start optimization
@@ -1658,7 +1658,7 @@ SHOULD retry the handshake with a new transport connection and ECHO disabled.<a 
   servers bounce ECHO off. Is it worth defining a strict mode toggle in the ECHO
   keys, for a deployment to indicate it is ready for that? ]]<a href="#section-7.2.2-8" class="pilcrow">¶</a></p>
 <p id="section-7.2.2-9">Clients SHOULD implement a limit on retries caused by "echo_retry_request" or
-servers which do not acknowledge the "encrypted_server_name" extension. If the
+servers which do not acknowledge the "encrypted_client_hello" extension. If the
 client does not retry in either scenario, it MUST report an error to the
 calling application.<a href="#section-7.2.2-9" class="pilcrow">¶</a></p>
 <div id="auth-public-name">
@@ -1666,7 +1666,7 @@ calling application.<a href="#section-7.2.2-9" class="pilcrow">¶</a></p>
             <h5 id="name-authenticating-for-the-publ">
 <a href="#section-7.2.2.1" class="section-number selfRef">7.2.2.1. </a><a href="#name-authenticating-for-the-publ" class="section-name selfRef">Authenticating for the public name</a>
             </h5>
-<p id="section-7.2.2.1-1">When the server cannot decrypt or does not process the "encrypted_server_name"
+<p id="section-7.2.2.1-1">When the server cannot decrypt or does not process the "encrypted_client_hello"
 extension, it continues with the handshake using the cleartext "server_name"
 extension instead (see <a href="#server-behavior" class="xref">Section 8</a>). Clients that offer ECHO then
 authenticate the connection with the public name, as follows:<a href="#section-7.2.2.1-1" class="pilcrow">¶</a></p>
@@ -1735,12 +1735,6 @@ echo_nonce = context.Export("tls13-echo-hrr-nonce", 16)
 <p id="section-7.2.3-7">[[OPEN ISSUE: Should we be using the PSK input or the info input?
 On the one hand, the requirements on info seem weaker, but maybe
 actually this needs to be secret? Analysis needed.]]<a href="#section-7.2.3-7" class="pilcrow">¶</a></p>
-<p id="section-7.2.3-8">[[OPEN ISSUE: This, along with trial decryption is
-pretty gross. It would just be a lot easier if we were willing to
-have the server indicate whether ECHO had been accepted or not.
-Given that the server is supposed to only reject ECHO when it doesn't
-know the key, and this is easy to probe for, can we just instead
-have an extension to indicate what has happened.]]<a href="#section-7.2.3-8" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1825,7 +1819,7 @@ ECHO was required. In particular, the unrecognized value alone does not
 indicate a misconfigured ECHO advertisement (<a href="#misconfiguration" class="xref">Section 9.1</a>). Instead,
 servers can measure occurrences of the "echo_required" alert to detect this
 case.<a href="#section-8-7" class="pilcrow">¶</a></p>
-<p id="section-8-8">If the ClientEncryptedCH value does match a known ECHOConfig, the server
+<p id="section-8-8">If the ClientEncryptedCH value matches a known ECHOConfig, the server
 then decrypts ClientEncryptedCH.encrypted_ch, using the private key skR
 corresponding to ESNIConfig, as follows:<a href="#section-8-8" class="pilcrow">¶</a></p>
 <div class="artwork art-text alignLeft" id="section-8-9">
@@ -1885,7 +1879,7 @@ server.<a href="#section-9.1-1" class="pilcrow">¶</a></p>
 <p id="section-9.1-2">The retry mechanism repairs inconsistencies, provided the server is
 authoritative for the public name. If server and advertised keys mismatch,
 the server will respond with echo_retry_requested. If the server does not understand the
-"encrypted_server_name" extension at all, it will ignore it as required by <span>[<a href="#RFC8446" class="xref">RFC8446</a>]</span>;
+"encrypted_client_hello" extension at all, it will ignore it as required by <span>[<a href="#RFC8446" class="xref">RFC8446</a>]</span>;
 Section 4.1.2. Provided the server can present a certificate valid for the public name,
 the client can safely retry with updated settings, as described in <a href="#handle-server-response" class="xref">Section 7.2</a>.<a href="#section-9.1-2" class="pilcrow">¶</a></p>
 <p id="section-9.1-3">Unless ECHO is disabled as a result of successfully establishing a connection to
@@ -1909,7 +1903,7 @@ the contents of the ServerHello as this message is not encrypted.<a href="#secti
 extension. <span>[<a href="#RFC8446" class="xref">RFC8446</a>]</span>; Section 9.3 requires that
 such proxies remove any extensions they do not understand. The handshake will
 then present a certificate based on the public name, without echoing the
-"encrypted_server_name" extension to the client.<a href="#section-9.2-1" class="pilcrow">¶</a></p>
+"encrypted_client_hello" extension to the client.<a href="#section-9.2-1" class="pilcrow">¶</a></p>
 <p id="section-9.2-2">Depending on whether the client is configured to accept the proxy's certificate
 as authoritative for the public name, this may trigger the retry logic described
 in <a href="#handle-server-response" class="xref">Section 7.2</a> or result in a connection failure. A proxy which
@@ -2162,7 +2156,7 @@ SNI uniformly?]]<a href="#section-11.5-2" class="pilcrow">¶</a></p>
         <h3 id="name-update-of-the-tls-extension">
 <a href="#section-12.1" class="section-number selfRef">12.1. </a><a href="#name-update-of-the-tls-extension" class="section-name selfRef">Update of the TLS ExtensionType Registry</a>
         </h3>
-<p id="section-12.1-1">IANA is requested to create an entry, encrypted_server_name(0xffce),
+<p id="section-12.1-1">IANA is requested to create an entry, encrypted_client_hello(0xffce),
 in the existing registry for ExtensionType (defined in
 <span>[<a href="#RFC8446" class="xref">RFC8446</a>]</span>), with "TLS 1.3" column values being set to
 "CH, EE", and "Recommended" column being set to "Yes".<a href="#section-12.1-1" class="pilcrow">¶</a></p>

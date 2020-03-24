@@ -1,6 +1,6 @@
 {
   "magic": "B8n2c@e8kvfx",
-  "timestamp": "2020-03-23T15:57:02.810867+00:00",
+  "timestamp": "2020-03-24T21:26:47.447007+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12718,7 +12718,7 @@
       "labels": [],
       "body": "I've tried to capture what I think is a reasonable way to handle padding now we've changed from ESNI->ECHO.  If we could do something like this, that'd be better than what's in -06.\r\n\r\nNote that I'd be even happier if we entirely eliminated ECHOConfig.minimum_inner_length - I don't think it actually adds any value and it represents yet another way to get a configuration wrong.  ",
       "createdAt": "2020-03-14T21:05:06Z",
-      "updatedAt": "2020-03-22T16:48:26Z",
+      "updatedAt": "2020-03-24T21:07:37Z",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -12862,6 +12862,27 @@
           "body": "\n\nOn 22/03/2020 16:44, Christopher Wood wrote:\n>> Would be v. happy to know if that made sense to others.\n> \n> It makes sense, I'm just not not sure it's worth the cost. \n\nYep. Me neither. It is cheaper than padding to 254 octets\nfor everyone though;-)\n\nPartly, I'm not that sympathetic towards anyone who\nwants to hide a crazily-long server_name. OTOH, I guess\nthere may be a few who can't easily change names so we\nprobably ought try do something for 'em.\n\nCheers,\nS.\n\n> That said,\n> this will always be an imperfect solution, so I'm happy either way.\n> \n> \n",
           "createdAt": "2020-03-22T16:48:26Z",
           "updatedAt": "2020-03-22T16:48:26Z"
+        },
+        {
+          "author": "sayrer",
+          "authorAssociation": "NONE",
+          "body": "> > I don't understand the focus on server input to a padding function that would ideally fill out one packet.\r\n> \r\n> Per [David's comment](https://github.com/tlswg/draft-ietf-tls-esni/pull/209#issuecomment-600322366) above, clients _could_ use help from servers in choosing appropriate padding lengths. (Only servers know their name anonymity set.)\r\n\r\nAgree that only servers could know their name anonymity set. But what is the cost of always padding out the ClientHello so it approaches the MTU? Just trying to understand why the spec attempts to economize on the number of bytes in the ClientHello packet.",
+          "createdAt": "2020-03-24T00:19:13Z",
+          "updatedAt": "2020-03-24T00:19:13Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> But what is the cost of always padding out the ClientHello so it approaches the MTU?\r\n\r\nAs far as I know, there's no reason other than folks might not want to always \"waste\" these bytes.",
+          "createdAt": "2020-03-24T20:34:31Z",
+          "updatedAt": "2020-03-24T20:34:31Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Padding the ClientHello up to an MTU isn't free. See the numbers here on what a 400-byte increase costs.\r\nhttps://www.imperialviolet.org/2018/04/11/pqconftls.html\r\n\r\nLikewise, also from that post and a [later experiment](https://www.imperialviolet.org/2019/10/30/pqsivssl.html), post-quantum key shares will likely exceed a packet anyway. I think our padding scheme should be designed with that expectation in mind (e.g., the `minimum_inner_length` mechanism fails this because a PQ key share in the inner ClientHello will blow past the built-in server assumptions on client behavior). Canary builds of Chrome already have code for such a thing behind a flag.\r\n\r\nEdit: Added a link to the later experiment, which I'd forgotten was a separate post.",
+          "createdAt": "2020-03-24T21:04:12Z",
+          "updatedAt": "2020-03-24T21:07:37Z"
         }
       ],
       "reviews": [
@@ -12943,6 +12964,85 @@
       "mergedBy": "ekr",
       "comments": [],
       "reviews": []
+    },
+    {
+      "number": 211,
+      "id": "MDExOlB1bGxSZXF1ZXN0MzkyNDczNzIz",
+      "title": "Remove OPEN ISSUE regarding an explicit ECHO negotiated signal.",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/211",
+      "state": "MERGED",
+      "author": "chris-wood",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2020-03-23T15:57:23Z",
+      "updatedAt": "2020-03-24T21:26:14Z",
+      "closedAt": "2020-03-24T21:26:14Z",
+      "mergedAt": "2020-03-24T21:26:14Z",
+      "mergedBy": "chris-wood",
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 212,
+      "id": "MDExOlB1bGxSZXF1ZXN0MzkyNTY5NDA2",
+      "title": "Bind CHOuter to CHInner",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/212",
+      "state": "OPEN",
+      "author": "chris-wood",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "This makes it so that changes to the outer CH do not affect the inner. If anything does change that might muck with the binder or decryption, then ECHO is ignored. (This should help GREASE.)",
+      "createdAt": "2020-03-23T18:43:59Z",
+      "updatedAt": "2020-03-23T20:18:04Z",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3Mzc5NzY5Nzky",
+          "commit": {
+            "abbreviatedOid": "867f908"
+          },
+          "author": "dmcardle",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-03-23T19:47:56Z",
+          "updatedAt": "2020-03-23T19:47:56Z",
+          "comments": [
+            {
+              "originalPosition": 23,
+              "body": "Just noticed this \"and and\"",
+              "createdAt": "2020-03-23T19:47:56Z",
+              "updatedAt": "2020-03-23T20:18:04Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3Mzc5Nzg5NTcz",
+          "commit": {
+            "abbreviatedOid": "867f908"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-03-23T20:17:28Z",
+          "updatedAt": "2020-03-23T20:17:28Z",
+          "comments": [
+            {
+              "originalPosition": 23,
+              "body": "Thanks :)",
+              "createdAt": "2020-03-23T20:17:28Z",
+              "updatedAt": "2020-03-23T20:18:04Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

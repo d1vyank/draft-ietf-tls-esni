@@ -1,6 +1,6 @@
 {
   "magic": "B8n2c@e8kvfx",
-  "timestamp": "2020-03-24T21:26:47.447007+00:00",
+  "timestamp": "2020-04-13T15:04:39.902486+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -4251,7 +4251,7 @@
       "labels": [],
       "body": "Even if #146 and #139 are closed without further edits, I think the draft should clarify the intended anonymity set for ESNIConfig and its associated record_digest. The draft does address this in section 7.5.2. \"Avoid widely-deployed shared secrets\", but I missed that. Additionally, the draft uses the term \"anonymity set\" only once, in section 6.1. \"Misconfiguration and Deployment Concerns\".\r\n\r\nThe explanation Ben Schwartz wrote on the list is very clear:\r\n\r\n\"The record_digest, like the ESNIConfig itself, is intended to be constant across all domains that form an anonymity set (i.e. O(1) ESNIConfigs per CDN).  Thus, the record_digest reveals no additional information to an onlooker who can observe the server IP.\"\r\n\r\nPerhaps a short section on anonymity sets would clarify this. I think some combination of section 7.5.2 and the last paragraph of the introduction would work.",
       "createdAt": "2019-11-25T20:35:36Z",
-      "updatedAt": "2019-11-25T20:59:05Z",
+      "updatedAt": "2020-04-09T04:35:43Z",
       "closedAt": null,
       "comments": [
         {
@@ -4260,6 +4260,13 @@
           "body": "@sayrer text to clarify this would be most welcome. Please provide a PR!",
           "createdAt": "2019-11-25T20:59:05Z",
           "updatedAt": "2019-11-25T20:59:05Z"
+        },
+        {
+          "author": "ret394",
+          "authorAssociation": "NONE",
+          "body": "is the clarification still required? just curious.",
+          "createdAt": "2020-04-09T04:35:42Z",
+          "updatedAt": "2020-04-09T04:35:42Z"
         }
       ]
     },
@@ -4292,6 +4299,162 @@
       "body": "I would like to suggest supporting not only the `server_name`, but also permit user names to be included.  This would provide excellent support for peer-to-peer applications for protocols that use `user@domain.name` identities and whose design can work peer-to-peer.\r\n\r\nThere are [TLS relays using SNI](https://github.com/dlundquist/sniproxy) that need no knowledge about the content of the TLS stream, so they are no men in the middle.  With user names added into ESNI, it would be possible to do similar things with registered users; [SIP](https://tools.ietf.org/html/rfc3261) springs to mind as an example, because phones/terminals `REGISTER` [to a domain's server](https://tools.ietf.org/html/rfc3261#section-10.3) that subsequently [relays](https://tools.ietf.org/html/rfc3261#page-12) `INVITE` and other messages between them but is effectively a MITM, which can modify traffic and tap [SDP](https://tools.ietf.org/html/rfc4566)-transmitted [keys](https://tools.ietf.org/html/rfc4566#section-5.12) and [communication end points](https://tools.ietf.org/html/rfc4566#section-4.1).\r\n\r\nThe general story is of course that end-to-end encryption is better than hop-by-hop encryption, as in current uses of TLS.  Peers representing users that register with an intermediate server sound like a good opportunity to be doing that.  All that is required is a way of deciding where to forward TLS traffic, without changing its contents.  ESNI comes really close to that goal (if it adds user names).",
       "createdAt": "2020-02-03T22:16:36Z",
       "updatedAt": "2020-02-03T22:16:36Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 214,
+      "id": "MDU6SXNzdWU1OTYwMzA5MTk=",
+      "title": "Clarify whether ClientHelloInner can support TLS 1.2.",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/214",
+      "state": "OPEN",
+      "author": "chris-wood",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "If the backend server does not include any signal for ECHO negotiation, either as a ServerHello extension or part of ServerHello.random, then it's possible to tunnel CHs to TLS 1.2 servers. This can be a feature, so let's consider whether or not it's in scope. (Note that we may discover that lack of server-side handshake message padding may make traffic analysis trivial.)\r\n\r\ncc @grittygrease ",
+      "createdAt": "2020-04-07T17:24:36Z",
+      "updatedAt": "2020-04-13T13:48:14Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "sftcd",
+          "authorAssociation": "NONE",
+          "body": "Not sure that'd be worthwhile. Wouldn't the TLS server cert be sent in clear to the client? So the server-name will be visible anyway. I'm not sure if the remaining CH content is sufficient to justify the added complexity of having to handle a TLSv1.2 CH.",
+          "createdAt": "2020-04-12T20:17:03Z",
+          "updatedAt": "2020-04-12T20:17:03Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "If we didn't encrypt the server flight, that's right! But we might consider designs wherein the client-facing server encrypts (or tunnels) the server flight, just as we've done for the client flight.",
+          "createdAt": "2020-04-12T22:01:57Z",
+          "updatedAt": "2020-04-12T22:01:57Z"
+        },
+        {
+          "author": "sftcd",
+          "authorAssociation": "NONE",
+          "body": "Ah, so support for TLSv1.2 here implies a new middle->client encryption. My first reaction is that we're nearly inventing masque again, so maybe this is a feature to leave for that?",
+          "createdAt": "2020-04-12T22:34:16Z",
+          "updatedAt": "2020-04-12T22:34:16Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> Ah, so support for TLSv1.2 here implies a new middle->client encryption. My first reaction is that we're nearly inventing masque again, so maybe this is a feature to leave for that?\r\n\r\nPossibly. There may be a middle ground. Considering the amount of TLS 1.2 servers in existence, I think this is worth some thought.",
+          "createdAt": "2020-04-13T13:48:14Z",
+          "updatedAt": "2020-04-13T13:48:14Z"
+        }
+      ]
+    },
+    {
+      "number": 215,
+      "id": "MDU6SXNzdWU1OTYwMzMzNTQ=",
+      "title": "Limit \"Don't stick out\" to explicit signals",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/215",
+      "state": "OPEN",
+      "author": "chris-wood",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "There's no explicit signal indicating that ECHO was negotiated for a connection. Thus, clients must perform trial decryption with both possible handshake keys. If we intend to keep this, then we should crisply state that \"don't stick out\" is limited to explicit signals, i.e., implicit signals such as size-related information is probably out of scope. (It's certainly an open question what is the \"best\" padding scheme for handshake messages.)\r\n\r\ncc @grittygrease ",
+      "createdAt": "2020-04-07T17:28:54Z",
+      "updatedAt": "2020-04-07T17:28:54Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 216,
+      "id": "MDU6SXNzdWU1OTg1MDI5MDk=",
+      "title": "where servers put CH details/hints: ECHOConfig or HTTPSSVC? ",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/216",
+      "state": "OPEN",
+      "author": "sftcd",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "ECHOConfig.public_name provides information that goes in the outer CH. HTTPSSVC.alpn provides information to go in the inner CH (I assume). We don't specify a way for the server to  explicitly say what alpn to use in the outer CH.  I think it'd be worth re-considering where servers/admins might want to put that kind of information and how much of the inner/outer CH they may want to describe. There could be a range of potential outcomes if we re-visit this - at one extreme HTTPSSVC or ECHOConfig might provide a template for the entire CH (possibly via some template naming/numbering scheme), at the other extreme we might decide that ECHOConfig should only contain the keying information and just define alpn, public_alpn and public_name as optional fields for inclusion in HTTPSSVC. But it seems a bit broken for the only two parts of the CH the server specifies to be handled so differently,",
+      "createdAt": "2020-04-12T14:54:22Z",
+      "updatedAt": "2020-04-13T15:00:58Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> HTTPSSVC.alpn provides information to go in the inner CH (I assume).\r\n\r\nIt doesn't. It's important for downgrade protection that the DNS (not secured) *not* impact the client's ALPN preferences. The interaction between HTTPSSVC and ALPN is... rather a mess and the text around this still needs work.",
+          "createdAt": "2020-04-13T14:54:07Z",
+          "updatedAt": "2020-04-13T14:54:07Z"
+        },
+        {
+          "author": "sftcd",
+          "authorAssociation": "NONE",
+          "body": "\n\nOn 13/04/2020 15:54, David Benjamin wrote:\n>> HTTPSSVC.alpn provides information to go in the inner CH (I\n>> assume).\n> \n> It doesn't. It's important for downgrade protection that the DNS (not\n> secured) *not* impact the client's ALPN preferences. The interaction\n> between HTTPSSVC and ALPN is... rather a mess and the text around\n> this still needs work.\n\nAh. Fair enough. Though I guess ECHO will likely only be\nused via DoH or something equivalent which could change\nthings maybe.\n\nBut regardless... doesn't the point still stand that we'd\nbe better off with some consistency in how we manage the\nserver-name in the outer CH, the ALPNs in both inner and outer, and any\nother CH content where the server wants to\npublish some hints?\n\nI'm not particularly wedded to a specific approach (though\nI'd likely be more biased to simplifying the ECHOConfig).\n\n\n",
+          "createdAt": "2020-04-13T15:00:58Z",
+          "updatedAt": "2020-04-13T15:00:58Z"
+        }
+      ]
+    },
+    {
+      "number": 217,
+      "id": "MDU6SXNzdWU1OTg1MjU2MTY=",
+      "title": "ECHOConfigContents.extensions is not needed",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/217",
+      "state": "OPEN",
+      "author": "sftcd",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "draft-06 includes an extensions field in ECHOConfigContents but no extension types are defined. If or when something new is needed it could just as easily be introduced via a new ECHOConfig.version or a new HTTPSSVC tag. The mandatory-to-understand design wit a \"critical\" bit was also used in X.509 and has not clearly worked as planned there. I don't see why that would differ here. Expecting implementers to include all the code required for generic extension handling and introducing new failure modes via critical bits, all for no concrete reason... seems wrong. I suggest we just delete the extensions field entirely. If needed, one can be added back via a new version later. \r\n\r\nBearing in mind the target for this draft is an experimental RFC, and so there's a reasonable likelihood of changes when/if we try promote ECHO to a standards-track RFC, we also don't need to be quite as future proof as normal, so deleting this field for now is not that risky.",
+      "createdAt": "2020-04-12T16:50:26Z",
+      "updatedAt": "2020-04-12T16:50:26Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 218,
+      "id": "MDU6SXNzdWU1OTg1NTY3MDI=",
+      "title": "HPKE code points vs. TLS ciphersuites",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/218",
+      "state": "OPEN",
+      "author": "sftcd",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "HPKE has it's own cipher suite code points, as well as the KEM id. I don't see why we're using TLS codepoints (ECHOConfigContents.suites and ClientEncryptedCH.suite) and yet also use one HPKE code point (ECHOConfigContents.kem_id). But maybe I'm missing something?\r\n\r\nIf not, I think one of two things would make sense:\r\n\r\n1. Change HPKE to use TLS code points. (That could be done but'd involve a bit of nose-holding, however it might be better in the longer term.)\r\n2. Only use HPKE code points in ECHO - I don't see that TLS ciphersuites are actually needed for ECHO, so this seems easiest. (That'd mean s/suite/aead_id/g I guess.)\r\n",
+      "createdAt": "2020-04-12T19:39:49Z",
+      "updatedAt": "2020-04-12T19:39:49Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 219,
+      "id": "MDU6SXNzdWU1OTg1NjU3NTU=",
+      "title": "cardinality of ECHOConfig vs. HTTPSSVC",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/219",
+      "state": "OPEN",
+      "author": "sftcd",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "A server can publish multuple HTTPSSVC RRs. Each of those RRs can contain multiple ECHOConfigContent values (i.e. multiple public keys and public_names). I don't see a real need for two different ways to publish more than one public key for a given server. There is a minor efficiency benefit in terms of the number of octets published in the DNS, but there is a lot of additional complexity in terms of code, and if nobody really publishes multiple public keys in one RR value, then that code is likely where we'll find CVEs. Reducing down to one public key per RR value also reduces the complexity when writing code to create/publish RRs.\r\n\r\nI think we have to support multiple RR values, because that's how the DNS works, and so the one to drop is the multiple public keys in one ECHOConfigs. IOW, I'd suggest one ECHOConfig has exactly one public key.\r\n ",
+      "createdAt": "2020-04-12T20:32:56Z",
+      "updatedAt": "2020-04-12T20:32:56Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 220,
+      "id": "MDU6SXNzdWU1OTg1Njc0Nzc=",
+      "title": "two type codes needed for interop",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/220",
+      "state": "OPEN",
+      "author": "sftcd",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "We need to pick some values for the \"encrypted_client_hello(TBD)\" and for the HTTPSSVC RR type before we can do interop. Allocating some values from the private ranges for those before draft-07 is pushed out would be good so we can do some interop testing. (Or for whatever is the next draft for which we want to do interop.)",
+      "createdAt": "2020-04-12T20:43:00Z",
+      "updatedAt": "2020-04-12T20:43:00Z",
       "closedAt": null,
       "comments": []
     }
@@ -12718,7 +12881,7 @@
       "labels": [],
       "body": "I've tried to capture what I think is a reasonable way to handle padding now we've changed from ESNI->ECHO.  If we could do something like this, that'd be better than what's in -06.\r\n\r\nNote that I'd be even happier if we entirely eliminated ECHOConfig.minimum_inner_length - I don't think it actually adds any value and it represents yet another way to get a configuration wrong.  ",
       "createdAt": "2020-03-14T21:05:06Z",
-      "updatedAt": "2020-03-24T21:07:37Z",
+      "updatedAt": "2020-04-12T22:09:36Z",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -12883,6 +13046,97 @@
           "body": "Padding the ClientHello up to an MTU isn't free. See the numbers here on what a 400-byte increase costs.\r\nhttps://www.imperialviolet.org/2018/04/11/pqconftls.html\r\n\r\nLikewise, also from that post and a [later experiment](https://www.imperialviolet.org/2019/10/30/pqsivssl.html), post-quantum key shares will likely exceed a packet anyway. I think our padding scheme should be designed with that expectation in mind (e.g., the `minimum_inner_length` mechanism fails this because a PQ key share in the inner ClientHello will blow past the built-in server assumptions on client behavior). Canary builds of Chrome already have code for such a thing behind a flag.\r\n\r\nEdit: Added a link to the later experiment, which I'd forgotten was a separate post.",
           "createdAt": "2020-03-24T21:04:12Z",
           "updatedAt": "2020-03-24T21:07:37Z"
+        },
+        {
+          "author": "sayrer",
+          "authorAssociation": "NONE",
+          "body": "> Padding the ClientHello up to an MTU isn't free. See the numbers here on what a 400-byte increase costs.\r\n> https://www.imperialviolet.org/2018/04/11/pqconftls.html\r\n\r\nIt's not quite clear what's going on in those results. For example, the mobile results are close to zero. Without seeing confidence intervals, and the distributions of the full packet sizes, I don't think this experiment settles this issue (although it could, with more detail). Also, is there a theory on /why/ 400 bytes might add latency?\r\n\r\n> Likewise, also from that post and a [later experiment](https://www.imperialviolet.org/2019/10/30/pqsivssl.html), post-quantum key shares will likely exceed a packet anyway. \r\n\r\nIf we're going to design the padding mechanism with PQ key shares in mind, but not conventional ones, that should be in the document.\r\n",
+          "createdAt": "2020-03-25T03:49:27Z",
+          "updatedAt": "2020-03-25T03:49:27Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> It's not quite clear what's going on in those results. For example, the mobile results are close to zero. Without seeing confidence intervals, and the distributions of the full packet sizes, I don't think this experiment settles this issue (although it could, with more detail). Also, is there a theory on /why/ 400 bytes might add latency?\r\n\r\n@agl would know the details of that experiment, but I don't think the idea that sending more bytes takes more time would be terribly surprising! :-P\r\n\r\n> If we're going to design the padding mechanism with PQ key shares in mind, but not conventional ones, that should be in the document.\r\n\r\nI don't think anyone's suggested designing without conventional key shares in mind. They are what's deployed today, after all. However, we shouldn't design *only* for a small unpadded ClientHello. PQ key shares will need larger ones. Session tickets also go in the ClientHello, and it's common for TLS servers to stick client certificates inside tickets, so you can already get large ones today already.",
+          "createdAt": "2020-03-25T18:06:08Z",
+          "updatedAt": "2020-03-25T18:06:08Z"
+        },
+        {
+          "author": "sayrer",
+          "authorAssociation": "NONE",
+          "body": "> > It's not quite clear what's going on in those results. For example, the mobile results are close to zero. Without seeing confidence intervals, and the distributions of the full packet sizes, I don't think this experiment settles this issue (although it could, with more detail). Also, is there a theory on /why/ 400 bytes might add latency?\r\n> \r\n> @agl would know the details of that experiment, but I don't think the idea that sending more bytes takes more time would be terribly surprising! :-P\r\n\r\nLet's assume the results for \"SI\" in the first link actually do show a significant delta. The question is whether per-packet costs dominate or per-byte costs do, and whether the experiment sometimes increased the number of packets (e.g. by sometimes bumping the ultimate ClientHello size above 1280). See Section 5.1 in https://www.usenix.org/system/files/conference/atc12/atc12-final186.pdf for device performance metrics on bytes vs packets.\r\n\r\nLooking at the ClientHello traffic on my computer, I can see that Safari is sending ClientHello messages that are about 500-600 bytes. My copy of Chrome seems to be sending CurveCECPQ2 (16696?) shares, and its ClientHello messages are fragmented.",
+          "createdAt": "2020-03-25T19:36:23Z",
+          "updatedAt": "2020-03-25T19:36:23Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@sftcd will you be able to update this as above?",
+          "createdAt": "2020-03-27T17:42:48Z",
+          "updatedAt": "2020-03-27T17:42:48Z"
+        },
+        {
+          "author": "sayrer",
+          "authorAssociation": "NONE",
+          "body": "would the spec allow me to put an arbitrarily-sized extension in the encrypted part of the ClientHello? if so, I don't care about the padding schemes.",
+          "createdAt": "2020-03-29T05:32:52Z",
+          "updatedAt": "2020-03-29T05:32:52Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> would the spec allow me to put an arbitrarily-sized extension in the encrypted part of the ClientHello? if so, I don't care about the padding schemes.\r\n\r\nYes, of course! The padding policies described here are guidance at best.",
+          "createdAt": "2020-03-29T15:39:55Z",
+          "updatedAt": "2020-03-29T15:39:55Z"
+        },
+        {
+          "author": "sftcd",
+          "authorAssociation": "NONE",
+          "body": "I've updated the PR to try reflect the discussion above. Please take a peek and see if it seems useful now.",
+          "createdAt": "2020-04-02T13:53:26Z",
+          "updatedAt": "2020-04-02T13:53:26Z"
+        },
+        {
+          "author": "sayrer",
+          "authorAssociation": "NONE",
+          "body": "This looks like the right idea. I'll review this again as well, but it's probably better to wait for @chris-wood's suggestions to be addressed.",
+          "createdAt": "2020-04-04T21:17:46Z",
+          "updatedAt": "2020-04-04T21:17:46Z"
+        },
+        {
+          "author": "sftcd",
+          "authorAssociation": "NONE",
+          "body": "Thanks for all the changes Chris. I think I've actioned all those as requested. If not, I tried, but failed:-)",
+          "createdAt": "2020-04-04T21:33:38Z",
+          "updatedAt": "2020-04-04T21:33:38Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@sftcd do you need any help moving this forward?",
+          "createdAt": "2020-04-07T13:46:51Z",
+          "updatedAt": "2020-04-07T13:46:51Z"
+        },
+        {
+          "author": "sftcd",
+          "authorAssociation": "NONE",
+          "body": "\n\nOn 07/04/2020 14:47, Christopher Wood wrote:\n> @sftcd do you need any help moving this forward?\n>\nDoing other stuff today but feel free to take the text\nand then do more edits. Or I can look at it tomorrow.\nEither's fine by me.\n\nS.\n",
+          "createdAt": "2020-04-07T13:51:12Z",
+          "updatedAt": "2020-04-07T13:51:12Z"
+        },
+        {
+          "author": "sayrer",
+          "authorAssociation": "NONE",
+          "body": "> On 07/04/2020 14:47, Christopher Wood wrote: @sftcd do you need any help moving this forward?\r\n> Doing other stuff today but feel free to take the text and then do more edits. \r\n\r\nThanks for taking the time. None of my comments are strongly-held opinions (meaning they only need to be addressed at all if others agree that the issues are important).\r\n\r\n",
+          "createdAt": "2020-04-08T00:02:47Z",
+          "updatedAt": "2020-04-08T00:02:47Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Strong +1 to @sayrer -- thank you for the work here, @sftcd!",
+          "createdAt": "2020-04-08T00:27:26Z",
+          "updatedAt": "2020-04-08T00:27:26Z"
         }
       ],
       "reviews": [
@@ -12902,25 +13156,25 @@
               "originalPosition": 21,
               "body": "```suggestion\r\nthe plaintext is at least this long.\r\n```",
               "createdAt": "2020-03-16T00:11:27Z",
-              "updatedAt": "2020-03-16T14:52:15Z"
+              "updatedAt": "2020-04-12T19:30:12Z"
             },
             {
               "originalPosition": 42,
               "body": "```suggestion\r\nGiven that extensions could be defined in the future that reveal sensitive information\r\nthrough their length, we cannot describe all the ways in which length information\r\n```",
               "createdAt": "2020-03-16T00:13:15Z",
-              "updatedAt": "2020-03-16T14:52:15Z"
+              "updatedAt": "2020-04-12T19:30:12Z"
             },
             {
               "originalPosition": 54,
               "body": "```suggestion\r\n  of the plaintext encoding of ClienHelloInner is greater than\r\n```",
               "createdAt": "2020-03-16T00:14:05Z",
-              "updatedAt": "2020-03-16T14:52:15Z"
+              "updatedAt": "2020-04-12T19:30:12Z"
             },
             {
               "originalPosition": 59,
               "body": "What about the converse?  Is it an error to send something that is not padded to the minimum length?",
               "createdAt": "2020-03-16T00:14:43Z",
-              "updatedAt": "2020-03-16T14:52:15Z"
+              "updatedAt": "2020-04-12T19:30:12Z"
             }
           ]
         },
@@ -12940,7 +13194,345 @@
               "originalPosition": 59,
               "body": "I think I'd say no, that's maybe better not treated as an error. But I could be convinced otherwise.",
               "createdAt": "2020-03-16T14:58:33Z",
-              "updatedAt": "2020-03-16T14:58:33Z"
+              "updatedAt": "2020-04-12T19:30:12Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3Mzg3NzA0OTQ0",
+          "commit": {
+            "abbreviatedOid": "9103fde"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "CHANGES_REQUESTED",
+          "body": "Thanks for the update! This looks like generally what we want. I left some recommendations for editorial improvements. ",
+          "createdAt": "2020-04-04T14:39:33Z",
+          "updatedAt": "2020-04-04T15:13:08Z",
+          "comments": [
+            {
+              "originalPosition": 30,
+              "body": "Could we move this paragraph to the security considerations? ",
+              "createdAt": "2020-04-04T14:39:33Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            },
+            {
+              "originalPosition": 32,
+              "body": "Could we move this content to its own sub-section, perhaps with the title, \"Recommended Padding Scheme,\" to reflect the fact that it's optional?",
+              "createdAt": "2020-04-04T14:43:05Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            },
+            {
+              "originalPosition": 36,
+              "body": "```suggestion\r\nFuture extensions could reveal sensitive information through their length. Consequently, \r\npadding should be flexible and support arbitrary extension changes. \r\n```",
+              "createdAt": "2020-04-04T14:54:38Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            },
+            {
+              "originalPosition": 42,
+              "body": "```suggestion\r\nThe target padding length of most ClientHello extensions can be determined without server help.\r\n```",
+              "createdAt": "2020-04-04T14:55:28Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            },
+            {
+              "originalPosition": 48,
+              "body": "```suggestion\r\nHowever, the \"server_name\" extension could benefit from server input (ECHOConfig.maximum_name_length). \r\nClients SHOULD compute the padding for this extension as follows:\r\n\r\n1. If ECHOConfig.maximum_name_length is longer than the actual server_name then \r\nclients SHOULD add padding to make up that difference.\r\n2. Otherwise, if ECHOConfig.maximum_name_length is zero or less than the length \r\nof the actual server_name then round the server_name up to a multiple of 32 octets \r\nand randomly add another 32 octets 50% of the time and then include that amount\r\nof additional padding.\r\n```",
+              "createdAt": "2020-04-04T15:09:07Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            },
+            {
+              "originalPosition": 52,
+              "body": "```suggestion\r\nThe amount of padding applied to the ClientHello is then computed as the sum of \r\nall per-extension padding values, rounded up to the nearest multiple of 32. \r\n(This additional rounding step aims to hide variance across different client\r\nimplementations.)\r\n```",
+              "createdAt": "2020-04-04T15:09:19Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            },
+            {
+              "originalPosition": 58,
+              "body": "```suggestion\r\nIn addition to padding ClientHelloInner, clients and servers will also need\r\nto pad all other handshake messages that have sensitive-length fields. For\r\nexample, if a client proposes ALPN values in ClientHelloInner, the\r\nserver-selected value will be returned in an EncryptedExtension, so that\r\nhandshake message also needs to be padded using TLS record layer padding.\r\n```",
+              "createdAt": "2020-04-04T15:09:32Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            },
+            {
+              "originalPosition": 11,
+              "body": "```suggestion\r\nadded or removed from the anonymity set during the lifetime of a particular\r\n```",
+              "createdAt": "2020-04-04T15:10:29Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            },
+            {
+              "originalPosition": 42,
+              "body": "Can we also merge this paragraph with the preceding one?",
+              "createdAt": "2020-04-04T15:12:35Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3Mzg3NzYyMzQ2",
+          "commit": {
+            "abbreviatedOid": "d4fe6f3"
+          },
+          "author": "sayrer",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-04-04T21:59:52Z",
+          "updatedAt": "2020-04-04T22:06:15Z",
+          "comments": [
+            {
+              "originalPosition": 13,
+              "body": "nit: this is a run-on sentence. Suggest breaking at \"...then this value can be set to zero. In that case, ...\"",
+              "createdAt": "2020-04-04T21:59:52Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            },
+            {
+              "originalPosition": 42,
+              "body": "Is this part right? Do clients need to consider padding for each field, or just the entire encrypted ClientHelloInner?",
+              "createdAt": "2020-04-04T22:01:01Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            },
+            {
+              "originalPosition": 53,
+              "body": "Suggest: \"add at least another 32 octets\".",
+              "createdAt": "2020-04-04T22:03:44Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            },
+            {
+              "originalPosition": 75,
+              "body": "Suggest: \"Variations in the length of the ClientHelloInner ciphertext...\"",
+              "createdAt": "2020-04-04T22:05:44Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            },
+            {
+              "originalPosition": 64,
+              "body": "Is there a good reference for \"TLS record layer padding\"? I think I know what this means, but it could be clearer.",
+              "createdAt": "2020-04-04T22:05:49Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3Mzg4MjgwMTEy",
+          "commit": {
+            "abbreviatedOid": "d4fe6f3"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-04-06T14:02:29Z",
+          "updatedAt": "2020-04-06T14:02:29Z",
+          "comments": [
+            {
+              "originalPosition": 64,
+              "body": "It's defined in Section 5.4 of RFC8446: https://tools.ietf.org/html/rfc8446#section-5.4",
+              "createdAt": "2020-04-06T14:02:29Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3Mzg4MjgwODI4",
+          "commit": {
+            "abbreviatedOid": "d4fe6f3"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-04-06T14:03:14Z",
+          "updatedAt": "2020-04-06T14:03:14Z",
+          "comments": [
+            {
+              "originalPosition": 42,
+              "body": "Yep -- this is what was discussed way up above in this PR. ",
+              "createdAt": "2020-04-06T14:03:14Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3Mzg4ODk0ODM3",
+          "commit": {
+            "abbreviatedOid": "d4fe6f3"
+          },
+          "author": "sayrer",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-04-07T08:27:18Z",
+          "updatedAt": "2020-04-07T08:27:18Z",
+          "comments": [
+            {
+              "originalPosition": 42,
+              "body": "Ok, I will re-read this PR, since I don't get it.\r\n\r\nBut, even so, I think this section needs a rationale. It says \"clients need to determine how much to pad given the semantics of that field\", but there is no reason given.",
+              "createdAt": "2020-04-07T08:27:18Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3Mzg4OTAzODcx",
+          "commit": {
+            "abbreviatedOid": "d4fe6f3"
+          },
+          "author": "sayrer",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-04-07T08:39:05Z",
+          "updatedAt": "2020-04-07T08:39:06Z",
+          "comments": [
+            {
+              "originalPosition": 64,
+              "body": "Maybe that reference suggests a terminology issue. It says \"All encrypted TLS records can be padded to inflate the size of the TLSCiphertext.\" Does ECHO define things in terms of TLSCiphertext?\r\n\r\nI don't necessarily think there is a problem here, but in the two code bases I've read (rustls and NSS), the encrypted SNI or ClientHello haven't fit in all that cleanly.\r\n\r\nIt seems like the properties of the ClientHelloInner encryption are bit hand-wavy. I understand what's trying to be accomplished (and support that effort), but I think more explanatory text could be called for.\r\n",
+              "createdAt": "2020-04-07T08:39:05Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3Mzg5MDYwMTA0",
+          "commit": {
+            "abbreviatedOid": "d4fe6f3"
+          },
+          "author": "jhoyla",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-04-07T12:22:06Z",
+          "updatedAt": "2020-04-07T12:28:11Z",
+          "comments": [
+            {
+              "originalPosition": 53,
+              "body": "Or \"add one or more blocks of 32 octets\" just to exclude behaviours that undo the effect of rounding the padding to a multiple of 32 octets.  ",
+              "createdAt": "2020-04-07T12:22:06Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            },
+            {
+              "originalPosition": 109,
+              "body": "Do we need to update GREASE if we are rounding the packet sizes to multiples of 32 octets? If we want GREASE to look like ECHO then it should have the same external properties. ",
+              "createdAt": "2020-04-07T12:26:53Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3Mzg5MTE3OTc2",
+          "commit": {
+            "abbreviatedOid": "d4fe6f3"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-04-07T13:31:42Z",
+          "updatedAt": "2020-04-07T13:31:42Z",
+          "comments": [
+            {
+              "originalPosition": 53,
+              "body": "\ud83d\udc4d to N >= 1 blocks. Clients can choose the distribution from which they want to sample N.",
+              "createdAt": "2020-04-07T13:31:42Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3Mzg5MTMxODI2",
+          "commit": {
+            "abbreviatedOid": "d4fe6f3"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-04-07T13:46:36Z",
+          "updatedAt": "2020-04-07T13:46:36Z",
+          "comments": [
+            {
+              "originalPosition": 109,
+              "body": "Yep -- there's a TODO in the GREASE section.",
+              "createdAt": "2020-04-07T13:46:36Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3Mzg5MTQzMzQ5",
+          "commit": {
+            "abbreviatedOid": "d4fe6f3"
+          },
+          "author": "jhoyla",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-04-07T13:58:26Z",
+          "updatedAt": "2020-04-07T13:58:27Z",
+          "comments": [
+            {
+              "originalPosition": 53,
+              "body": "On second thoughts, we should probably match what's done in encrypted DNS, because otherwise we could create a potential leak from correlating the DNS request length with the ECHO length. ",
+              "createdAt": "2020-04-07T13:58:26Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3MzkxODg3NzEw",
+          "commit": {
+            "abbreviatedOid": "d4fe6f3"
+          },
+          "author": "sftcd",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-04-12T19:19:52Z",
+          "updatedAt": "2020-04-12T19:19:52Z",
+          "comments": [
+            {
+              "originalPosition": 42,
+              "body": "I moved that rationale down to the security considerations section as suggested earlier. It could be moved back up, but basically anything where the length could be sensitive may need padding.",
+              "createdAt": "2020-04-12T19:19:52Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3MzkxODg4MjQx",
+          "commit": {
+            "abbreviatedOid": "d4fe6f3"
+          },
+          "author": "sftcd",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-04-12T19:27:03Z",
+          "updatedAt": "2020-04-12T19:27:04Z",
+          "comments": [
+            {
+              "originalPosition": 53,
+              "body": "Don't think copying DNS is correct. RFC 8467 calls for queries to be padded to a multiple of 128 octets and could be that the server-name is not the only sensitive name. \r\n\r\nI'm not sure there's a point in recommending against zero additional blocks of 32 - so long as you don't do zero too often it'd be ok. If you look back to the name lengths seen in the data I have it may be that zero additional blocks 50% of the time is ok. \r\n\r\nBut mainly, I'd say we may be better to wait 'till we have a few implementations and then see what makes best sense.",
+              "createdAt": "2020-04-12T19:27:04Z",
+              "updatedAt": "2020-04-12T19:30:12Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3MzkxODk5MTAz",
+          "commit": {
+            "abbreviatedOid": "abd6637"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-04-12T22:09:36Z",
+          "updatedAt": "2020-04-12T22:09:36Z",
+          "comments": [
+            {
+              "originalPosition": 53,
+              "body": "> Don't think copying DNS is correct. RFC 8467 calls for queries to be padded to a multiple of 128 octets and could be that the server-name is not the only sensitive name.\r\n\r\nCan you show that there is no information leakage if the two aren't in sync?\r\n\r\n> I'm not sure there's a point in recommending against zero additional blocks of 32 - so long as you don't do zero too often it'd be ok. If you look back to the name lengths seen in the data I have it may be that zero additional blocks 50% of the time is ok.\r\n\r\nThe proposal above suggests N >= 1, not zero. In any case, as you suggest, spinning our wheels on something for which there is no backing data or analysis (yet) seems premature.",
+              "createdAt": "2020-04-12T22:09:36Z",
+              "updatedAt": "2020-04-12T22:09:36Z"
             }
           ]
         }
@@ -12996,7 +13588,7 @@
       "labels": [],
       "body": "This makes it so that changes to the outer CH do not affect the inner. If anything does change that might muck with the binder or decryption, then ECHO is ignored. (This should help GREASE.)",
       "createdAt": "2020-03-23T18:43:59Z",
-      "updatedAt": "2020-03-23T20:18:04Z",
+      "updatedAt": "2020-03-24T22:21:13Z",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -13041,8 +13633,53 @@
               "updatedAt": "2020-03-23T20:18:04Z"
             }
           ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3MzgwNzM1MzU0",
+          "commit": {
+            "abbreviatedOid": "0c351a6"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-03-24T22:14:14Z",
+          "updatedAt": "2020-03-24T22:21:13Z",
+          "comments": [
+            {
+              "originalPosition": 54,
+              "body": "This probably wants an extra sentence that you add the identity and binder to the PSK extension. At first I was confused what you did with the binder.",
+              "createdAt": "2020-03-24T22:14:15Z",
+              "updatedAt": "2020-03-24T22:21:13Z"
+            },
+            {
+              "originalPosition": 43,
+              "body": "(Hah. Nice!)",
+              "createdAt": "2020-03-24T22:20:47Z",
+              "updatedAt": "2020-03-24T22:21:13Z"
+            }
+          ]
         }
       ]
+    },
+    {
+      "number": 213,
+      "id": "MDExOlB1bGxSZXF1ZXN0NDAwMTY3MDgz",
+      "title": "README: fix links to WG docs",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/213",
+      "state": "MERGED",
+      "author": "Lekensteyn",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2020-04-07T10:03:56Z",
+      "updatedAt": "2020-04-13T15:04:03Z",
+      "closedAt": "2020-04-13T15:04:03Z",
+      "mergedAt": "2020-04-13T15:04:03Z",
+      "mergedBy": "chris-wood",
+      "comments": [],
+      "reviews": []
     }
   ]
 }
